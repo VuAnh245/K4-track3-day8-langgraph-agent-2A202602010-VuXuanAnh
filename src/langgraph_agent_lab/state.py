@@ -6,9 +6,9 @@ Students should extend the schema only when needed. Keep state lean and serializ
 from __future__ import annotations
 
 from enum import StrEnum
+from operator import add
 from typing import Annotated, Any, TypedDict
 
-from operator import add
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -39,11 +39,7 @@ class ApprovalDecision(BaseModel):
 
 
 class AgentState(TypedDict, total=False):
-    """LangGraph state.
-
-    TODO(student): decide which fields should be append-only and which should be overwritten.
-    The current annotations give a safe starting point for auditability.
-    """
+    """LangGraph state schema for support ticket agent."""
 
     thread_id: str
     scenario_id: str
@@ -53,9 +49,10 @@ class AgentState(TypedDict, total=False):
     attempt: int
     max_attempts: int
     final_answer: str | None
-    # TODO(student): you will need additional fields for clarification, risky actions,
-    # approval decisions, and retry-loop gating. Add them as you implement nodes.
-    # Hint: check what your nodes return and what your routing functions read.
+    evaluation_result: str
+    pending_question: str
+    proposed_action: str
+    approval: dict[str, Any]
     messages: Annotated[list[str], add]
     tool_results: Annotated[list[str], add]
     errors: Annotated[list[str], add]
@@ -99,4 +96,6 @@ def initial_state(scenario: Scenario) -> AgentState:
 
 def make_event(node: str, event_type: str, message: str, **metadata: Any) -> dict[str, Any]:
     """Create a normalized event payload."""
-    return LabEvent(node=node, event_type=event_type, message=message, metadata=metadata).model_dump()
+    return LabEvent(
+        node=node, event_type=event_type, message=message, metadata=metadata
+    ).model_dump()

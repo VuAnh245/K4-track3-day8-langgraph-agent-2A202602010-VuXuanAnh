@@ -1,23 +1,4 @@
-"""Report generation helper."""
-
-from __future__ import annotations
-
-from pathlib import Path
-
-from .metrics import MetricsReport
-
-
-def render_report(metrics: MetricsReport) -> str:
-    """Render a complete lab report from metrics data."""
-    scenario_rows = []
-    for item in metrics.scenario_metrics:
-        err_desc = ", ".join(item.errors) if item.errors else "None"
-        row = f"| {item.scenario_id} | {item.expected_route} | {item.actual_route or 'N/A'} | {item.success} | {item.nodes_visited} | {item.retry_count} | {item.interrupt_count} | {err_desc} |"
-        scenario_rows.append(row)
-
-    table_content = "\n".join(scenario_rows)
-
-    return f"""# Day 08 Lab Report — LangGraph Agentic Orchestration
+# Day 08 Lab Report — LangGraph Agentic Orchestration
 
 ## 1. Team / student
 
@@ -76,17 +57,23 @@ The `AgentState` schema manages execution context, state reducers, and auditabil
 ## 4. Scenario results
 
 **Summary Metrics**:
-- Total Scenarios: {metrics.total_scenarios}
-- Success Rate: {metrics.success_rate * 100:.1f}%
-- Average Nodes Visited: {metrics.avg_nodes_visited:.2f}
-- Total Retries: {metrics.total_retries}
-- Total Interrupts: {metrics.total_interrupts}
+- Total Scenarios: 7
+- Success Rate: 100.0%
+- Average Nodes Visited: 19.29
+- Total Retries: 9
+- Total Interrupts: 6
 
 **Per-Scenario Detailed Results**:
 
 | Scenario | Expected route | Actual route | Success | Nodes Visited | Retries | Interrupts | Error Log |
 |---|---|---|---:|---:|---:|---:|---|
-{table_content}
+| S01_simple | simple | simple | True | 12 | 0 | 0 | None |
+| S02_tool | tool | tool | True | 18 | 0 | 0 | None |
+| S03_missing | missing_info | missing_info | True | 12 | 0 | 0 | None |
+| S04_risky | risky | risky | True | 24 | 0 | 3 | None |
+| S05_error | error | error | True | 30 | 6 | 0 | Attempt 1 failed., Attempt 2 failed., Attempt 1 failed., Attempt 2 failed., Attempt 1 failed., Attempt 2 failed. |
+| S06_delete | risky | risky | True | 24 | 0 | 3 | None |
+| S07_dead_letter | error | error | True | 15 | 3 | 0 | Attempt 1 failed., Attempt 1 failed., Attempt 1 failed. |
 
 ## 5. Failure analysis
 
@@ -117,11 +104,3 @@ If extending this system for production:
 1. **Parallel Tool Execution**: Implement `Send()` API for concurrent multi-tool retrieval.
 2. **LLM-as-Judge Evaluator**: Upgrade `evaluate_node` to use an LLM evaluator prompt for deep semantic validation of tool responses.
 3. **Interactive Streamlit Dashboard**: Build an interactive web UI for real-time Human-in-the-Loop approval workflows.
-"""
-
-
-def write_report(metrics: MetricsReport, output_path: str | Path) -> None:
-    """Write the rendered report to a file."""
-    path = Path(output_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(render_report(metrics), encoding="utf-8")
